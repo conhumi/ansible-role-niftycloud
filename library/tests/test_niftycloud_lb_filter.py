@@ -19,7 +19,7 @@ sys.path.append('..')
 
 import unittest
 import mock
-import niftycloud_lb
+import niftycloud_lb_filter
 import xml.etree.ElementTree as etree
 import urllib, hmac, hashlib, base64
 
@@ -93,7 +93,7 @@ class TestNiftycloud(unittest.TestCase):
                         InstanceId = self.mockModule.params['instance_id']
 		)
 
-		signature = niftycloud_lb.calculate_signature(secret_access_key, method, endpoint, path, params)
+		signature = niftycloud_lb_filter.calculate_signature(secret_access_key, method, endpoint, path, params)
 		self.assertEqual(signature, 'Y7/0nc3dCK9UNkp+w5sh08ybJLQjh69mXOgcxJijDEU=')
 
 	# calculate signature with string parameter including slash
@@ -111,7 +111,7 @@ class TestNiftycloud(unittest.TestCase):
 			Description = '/'
 		)
 
-		signature = niftycloud_lb.calculate_signature(secret_access_key, method, endpoint, path, params)
+		signature = niftycloud_lb_filter.calculate_signature(secret_access_key, method, endpoint, path, params)
 
 		# This constant string is signature calculated by "library/tests/files/calculate_signature_sample.sh".
 		# This shell-script calculate with encoding a slash, like "niftycloud.calculate_signature()".
@@ -124,7 +124,7 @@ class TestNiftycloud(unittest.TestCase):
 		params = dict()
 
 		with mock.patch('requests.get', self.mockRequestsGetDescribeLoadBalancers):
-			info = niftycloud_lb.request_to_api(self.mockModule, method, action, params)
+			info = niftycloud_lb_filter.request_to_api(self.mockModule, method, action, params)
 
 		self.assertEqual(info['status'], 200)
 		self.assertEqual(info['xml_namespace'], dict(nc = self.xmlnamespace))
@@ -138,7 +138,7 @@ class TestNiftycloud(unittest.TestCase):
 		params = dict()
 
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
-			info = niftycloud_lb.request_to_api(self.mockModule, method, action, params)
+			info = niftycloud_lb_filter.request_to_api(self.mockModule, method, action, params)
 
 		self.assertEqual(info['status'], 500)
 		self.assertEqual(etree.tostring(info['xml_body']),
@@ -152,7 +152,7 @@ class TestNiftycloud(unittest.TestCase):
 
 		self.assertRaises(
 			Exception,
-			niftycloud_lb.request_to_api,
+			niftycloud_lb_filter.request_to_api,
 			(self.mockModule, method, action, params)
 		)
 
@@ -165,7 +165,7 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsError):
 			self.assertRaises(
 				Exception,
-				niftycloud_lb.request_to_api,
+				niftycloud_lb_filter.request_to_api,
 				(self.mockModule, method, action, params)
 			)
 
@@ -176,16 +176,16 @@ class TestNiftycloud(unittest.TestCase):
 		params = dict()
 
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
-			info = niftycloud_lb.request_to_api(self.mockModule, method, action, params)
+			info = niftycloud_lb_filter.request_to_api(self.mockModule, method, action, params)
 
-		error_info = niftycloud_lb.get_api_error(info['xml_body'])
+		error_info = niftycloud_lb_filter.get_api_error(info['xml_body'])
 		self.assertEqual(error_info['code'],    'Server.InternalError')
 		self.assertEqual(error_info['message'], 'An error has occurred. Please try again later.')
 
 	# describe
 	def test_describe_load_balancers(self):
 		with mock.patch('requests.get', self.mockRequestsGetDescribeLoadBalancers):
-			info = niftycloud_lb.describe_load_balancers(self.mockModule, dict())
+			info = niftycloud_lb_filter.describe_load_balancers(self.mockModule, dict())
 		self.assertEqual(info['status'], 200)
 		self.assertEqual(info['xml_namespace'], dict(nc = self.xmlnamespace))
 		self.assertEqual(etree.tostring(info['xml_body']),
@@ -196,7 +196,7 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsGetDescribeLoadBalancers):
 			self.assertEqual(
 				'present',
-				niftycloud_lb.get_state_instance_in_load_balancer(self.mockModule)
+				niftycloud_lb_filter.get_state_instance_in_load_balancer(self.mockModule)
 			)
 
 	# absent
@@ -205,7 +205,7 @@ class TestNiftycloud(unittest.TestCase):
 			self.mockModule.params['instance_id'] = 'test999'
 			self.assertEqual(
 				'absent',
-				niftycloud_lb.get_state_instance_in_load_balancer(self.mockModule)
+				niftycloud_lb_filter.get_state_instance_in_load_balancer(self.mockModule)
 			)
 
 	# internal server error
@@ -213,7 +213,7 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
 			self.assertRaises(
 				Exception,
-				niftycloud_lb.get_state_instance_in_load_balancer,
+				niftycloud_lb_filter.get_state_instance_in_load_balancer,
 				(self.mockModule)
 			)
 
@@ -223,7 +223,7 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsGetDescribeLoadBalancers):
 			self.assertEqual(
 				True,
-				niftycloud_lb.is_present_in_load_balancer(self.mockModule)
+				niftycloud_lb_filter.is_present_in_load_balancer(self.mockModule)
 			)
 
 	# is present instance (absent)
@@ -232,7 +232,7 @@ class TestNiftycloud(unittest.TestCase):
 			self.mockModule.params['instance_id'] = 'test999'
 			self.assertEqual(
 				False,
-				niftycloud_lb.is_present_in_load_balancer(self.mockModule)
+				niftycloud_lb_filter.is_present_in_load_balancer(self.mockModule)
 			)
 
 	# internal server error
@@ -240,7 +240,7 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
 			self.assertRaises(
 				Exception,
-				niftycloud_lb.is_present_in_load_balancer,
+				niftycloud_lb_filter.is_present_in_load_balancer,
 				(self.mockModule)
 			)
 
@@ -249,7 +249,7 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsGetDescribeLoadBalancers):
 			self.assertEqual(
 				False,
-				niftycloud_lb.is_absent_in_load_balancer(self.mockModule)
+				niftycloud_lb_filter.is_absent_in_load_balancer(self.mockModule)
 			)
 
 	# is absent instance (absent)
@@ -258,7 +258,7 @@ class TestNiftycloud(unittest.TestCase):
 			self.mockModule.params['instance_id'] = 'test999'
 			self.assertEqual(
 				True,
-				niftycloud_lb.is_absent_in_load_balancer(self.mockModule)
+				niftycloud_lb_filter.is_absent_in_load_balancer(self.mockModule)
 			)
 
 	# internal server error
@@ -266,80 +266,80 @@ class TestNiftycloud(unittest.TestCase):
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
 			self.assertRaises(
 				Exception,
-				niftycloud_lb.is_absent_in_load_balancer,
+				niftycloud_lb_filter.is_absent_in_load_balancer,
 				(self.mockModule)
 			)
 
 	# absent -> present
 	def test_regist_instance_absent(self):
 		with mock.patch('requests.get', self.mockRequestsGetRegisterInstancesWithLoadBalancer):
-			with mock.patch('niftycloud_lb.is_present_in_load_balancer',
+			with mock.patch('niftycloud_lb_filter.is_present_in_load_balancer',
 					mock.MagicMock(return_value=False)):
 				self.assertEqual(
 					(True, 'present'),
-					niftycloud_lb.regist_instance(self.mockModule)
+					niftycloud_lb_filter.regist_filter(self.mockModule)
 				)
 
 	# present -> present
 	def test_regist_instance_present(self):
 		with mock.patch('requests.get', self.mockRequestsGetRegisterInstancesWithLoadBalancer):
-			with mock.patch('niftycloud_lb.is_present_in_load_balancer',
+			with mock.patch('niftycloud_lb_filter.is_present_in_load_balancer',
 					mock.MagicMock(return_value=True)):
 				self.assertEqual(
 					(False, 'present'),
-					niftycloud_lb.regist_instance(self.mockModule)
+					niftycloud_lb_filter.regist_filter(self.mockModule)
 				)
 
 	# internal server error
 	def test_regist_instance_error(self):
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
-			with mock.patch('niftycloud_lb.is_present_in_load_balancer',
+			with mock.patch('niftycloud_lb_filter.is_present_in_load_balancer',
 					mock.MagicMock(return_value=False)):
 				self.assertRaises(
 					Exception,
-					niftycloud_lb.regist_instance,
+					niftycloud_lb_filter.regist_filter,
 					(self.mockModule)
 				)
 
 	# deregist
 	def test_deregist_instance(self):
 		with mock.patch('requests.get', self.mockRequestsGetDeregisterInstancesFromLoadBalancer):
-			with mock.patch('niftycloud_lb.describe_load_balancers',
+			with mock.patch('niftycloud_lb_filter.describe_load_balancers',
 					self.mockDescribeLoadBalancers):
 				self.assertEqual(
 					(True, 'absent(lb001:80->80)'),
-					niftycloud_lb.deregist_instance(self.mockModule)
+					niftycloud_lb_filter.deregist_filter(self.mockModule)
 				)
 
 	# deregist failed
 	def test_deregist_instance_failed(self):
 		with mock.patch('requests.get', self.mockRequestsGetDeregisterInstancesFromLoadBalancer):
-			with mock.patch('niftycloud_lb.describe_load_balancers',
+			with mock.patch('niftycloud_lb_filter.describe_load_balancers',
 					self.mockDescribeLoadBalancers):
 				self.mockModule.params['instance_id'] = 'test999'
 				self.assertEqual(
 					(False, 'absent()'),
-					niftycloud_lb.deregist_instance(self.mockModule)
+					niftycloud_lb_filter.deregist_filter(self.mockModule)
 				)
 
 	# deregist internal server error
 	def test_deregist_instance_error(self):
 		with mock.patch('requests.get', self.mockRequestsInternalServerError):
-			with mock.patch('niftycloud_lb.describe_load_balancers',
+			with mock.patch('niftycloud_lb_filter.describe_load_balancers',
 					self.mockDescribeLoadBalancers):
 				self.assertRaises(
 					Exception,
-					niftycloud_lb.deregist_instance,
+					niftycloud_lb_filter.deregist_filter,
 					(self.mockModule)
 				)
 
 	# deregist internal server error (describe)
 	def test_deregist_instance_describe_error(self):
-		with mock.patch('niftycloud_lb.describe_load_balancers',
+		with mock.patch('niftycloud_lb_filter.describe_load_balancers',
 				self.mockRequestsInternalServerError):
 			self.assertRaises(
 				Exception,
-				niftycloud_lb.deregist_instance,
+				niftycloud_lb_filter.deregist_filter,
 				(self.mockModule)
 			)
 
